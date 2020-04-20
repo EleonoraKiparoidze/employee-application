@@ -1,0 +1,38 @@
+version: '3.7'
+services:
+  database:
+    image: mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: employees
+    ports:
+      - 3306:3306
+    networks:
+      - spring-boot-mysql-network
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8090:8080
+    networks:
+      - spring-boot-mysql-network
+
+  employee-service:
+    image: employee-service:0.1
+    ports:
+      - "8080:8080"
+    environment:
+      PROFILE: "default"
+      SERVER_PORT: "8080"
+      DATABASE_URL: "database"
+      DATABASE_PORT: "3306"
+    networks:
+      - spring-boot-mysql-network
+    depends_on:
+      - database
+
+networks:
+  spring-boot-mysql-network:
+    driver: bridge
