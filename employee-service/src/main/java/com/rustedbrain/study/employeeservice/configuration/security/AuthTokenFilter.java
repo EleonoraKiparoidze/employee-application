@@ -3,6 +3,7 @@ package com.rustedbrain.study.employeeservice.configuration.security;
 import com.rustedbrain.study.employeeservice.service.UserServiceImpl;
 import io.jsonwebtoken.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.Nullable;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -26,6 +27,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
 
     private static final int JWT_EXPIRATION_HOURS = 24;
     private static final String JWT_SECRET = "oleksii";
+    private static final String TOKEN_PREFIX = "Bearer ";
 
     @Autowired
     private UserServiceImpl userService;
@@ -38,7 +40,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         Instant expirationInstant = currentInstant.plus(JWT_EXPIRATION_HOURS, ChronoUnit.HOURS);
 
         return Jwts.builder()
-                .setSubject((userPrincipal.getUsername()))
+                .setSubject(userPrincipal.getUsername())
                 .setIssuedAt(Date.from(currentInstant))
                 .setExpiration(Date.from(expirationInstant))
                 .signWith(SignatureAlgorithm.HS512, JWT_SECRET)
@@ -67,11 +69,12 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
+    @Nullable
     private String parseJwt(HttpServletRequest request) {
         String headerAuth = request.getHeader("Authorization");
 
-        if (StringUtils.hasText(headerAuth) && headerAuth.startsWith("Bearer ")) {
-            return headerAuth.substring(7);
+        if (StringUtils.hasText(headerAuth) && headerAuth.startsWith(TOKEN_PREFIX)) {
+            return headerAuth.substring(TOKEN_PREFIX.length());
         }
 
         return null;
